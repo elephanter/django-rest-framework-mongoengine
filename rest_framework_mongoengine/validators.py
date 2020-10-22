@@ -54,17 +54,17 @@ class UniqueTogetherValidator(MongoValidatorMixin, validators.UniqueTogetherVali
 
     Used by :class:`DocumentSerializer` for fields, present in unique indexes.
     """
-    def __call__(self, attrs, serializer):
+    def __call__(self, attrs):
         try:
-            self.enforce_required_fields(attrs, serializer)
+            self.enforce_required_fields(attrs)
         except SkipField:
             return
 
         # Determine the existing instance, if this is an update operation.
-        instance = getattr(serializer, 'instance', None)
+        instance = self.instance
 
         queryset = self.queryset
-        queryset = self.filter_queryset(attrs, queryset, serializer)
+        queryset = self.filter_queryset(attrs, queryset)
         queryset = self.exclude_current_instance(queryset, instance)
 
         # Ignore validation if any field is None
@@ -88,9 +88,9 @@ class OptionalUniqueTogetherValidator(UniqueTogetherValidator):
     This validator passes validation if all of validation fields are missing. (for use with partial data)
     """
 
-    def enforce_required_fields(self, attrs, serializer):
+    def enforce_required_fields(self, attrs):
         try:
-            super(OptionalUniqueTogetherValidator, self).enforce_required_fields(attrs, serializer)
+            super(OptionalUniqueTogetherValidator, self).enforce_required_fields(attrs)
         except ValidationError as e:
             if set(e.detail.keys()) == set(self.fields):
                 raise SkipField()
